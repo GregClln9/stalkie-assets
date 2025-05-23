@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import re
+import uuid
 
 def main():
-    exts = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".webp", ".avif"}
-    photo_re = re.compile(r"photo_(\d+)\.\w+$", re.I)
+    # Extensions à traiter
+    exts = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp', '.avif'}
 
-    files = [p for p in Path('.').iterdir() if p.is_file() and p.suffix.lower() in exts]
+    # Récupère tous les fichiers image, triés par nom
+    files = sorted(
+        [p for p in Path('.').iterdir() if p.is_file() and p.suffix.lower() in exts],
+        key=lambda p: p.name.lower()
+    )
 
-    # Indices déjà utilisés (photo_12.png, photo_99.jpg, …)
-    used = {int(m.group(1)) for p in files if (m := photo_re.fullmatch(p.name))}
-    max_used = max(used) if used else 0
+    # Étape 1: renommer en noms temporaires pour éviter les collisions
+    temp_names = []
+    for i, f in enumerate(files, start=1):
+        temp_name = f".__tmp_{uuid.uuid4().hex}{f.suffix.lower()}"
+        f.rename(temp_name)
+        temp_names.append((temp_name, f.suffix.lower()))
 
-    # On renomme uniquement ce qui N’EST PAS déjà un « photo_X.ext »
-    to_rename = [p for p in files if not photo_re.fullmatch(p.name)]
-    to_rename.sort(key=lambda p: p.name.lower())   # facultatif
+    # Étape 2: renommer en photo_1.ext, photo_2.ext, ...
+    for i, (tmp, ext) in enumerate(temp_names, start=1):
+        new_name = f"photo_{i}{ext}"
+        Path(tmp).rename(new_name)
+        print(f"{tmp}  →  {new_name}")
 
-    next_idx = max_used + 1
-    for f in to_rename:
-        while Path(f"photo_{next_idx}{f.suffix.lower()}").exists():
-            next_idx += 1            # saute les trous éventuels
-        new_name = f"photo_{next_idx}{f.suffix.lower()}"
-        f.rename(new_name)
-        print(f"{f.name}  →  {new_name}")
-        next_idx += 1
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
