@@ -1,0 +1,9 @@
+# Secrets / clés API — ne jamais commiter
+.env
+.env.*
+*.key
+secrets*
+api_key*
+
+# macOS
+.DS_Store
