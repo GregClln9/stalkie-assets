@@ -11,3 +11,7 @@ api_key*
 # Python
 __pycache__/
 *.pyc
+
+# Outillage IA local (non versionné)
+regenerate_ai_images.py
+ai_images.txt
